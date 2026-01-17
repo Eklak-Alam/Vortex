@@ -33,7 +33,7 @@ services:
     container_name: vortex_backend
     restart: always
     ports:
-      - "${BACKEND_PORT}:8080"
+      - "${BACKEND_PORT}:8081"
     environment:
       DB_URL: jdbc:mysql://mysql_db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true
       DB_USERNAME: ${MYSQL_USER}
