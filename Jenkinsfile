@@ -6,8 +6,8 @@ pipeline {
         BACKEND_IMAGE = "eklakalam/vortex-backend:latest"
         FRONTEND_IMAGE = "eklakalam/vortex-frontend:latest"
         
-        // 2. AUTO-DETECT SERVER IP (Fixes the localhost issue automatically)
-        // This command runs on the EC2 and gets its own Public IP
+        // 2. AUTO-DETECT SERVER IP
+        // Finds the EC2 Public IP automatically.
         SERVER_IP = sh(script: "curl -s ifconfig.me", returnStdout: true).trim()
     }
 
@@ -41,18 +41,20 @@ pipeline {
                 script {
                     echo "------------------------------------------------"
                     echo "🔨 Building Backend..."
-                    // We build directly. If this fails, the pipeline stops (Acting as a Sanity Check)
                     sh "docker build -t $BACKEND_IMAGE ./backend"
                     sh "docker push $BACKEND_IMAGE"
 
                     echo "------------------------------------------------"
                     echo "🔨 Building Frontend..."
-                    echo "🌍 Injection API URL: http://${SERVER_IP}:8081/api/v1"
                     
-                    // CRITICAL FIX: We inject the REAL IP, not localhost
+                    // ✨ NGINX OPTIMIZATION:
+                    // We point to Port 80 (default HTTP), so we remove ":8081" from the URL.
+                    // Nginx will receive this and forward it to the backend internally.
+                    echo "🌍 API URL: http://${SERVER_IP}/api/v1"
+                    
                     sh """
                     docker build \
-                    --build-arg NEXT_PUBLIC_API_URL=http://${SERVER_IP}:8081/api/v1 \
+                    --build-arg NEXT_PUBLIC_API_URL=http://${SERVER_IP}/api/v1 \
                     -t $FRONTEND_IMAGE ./frontend
                     """
                     sh "docker push $FRONTEND_IMAGE"
@@ -68,7 +70,6 @@ pipeline {
                 script {
                     echo "Deploying new version..."
                     
-                    // No SSH needed! Jenkins runs this directly on the server.
                     sh '''
                     # 1. Export Runtime Secrets (Database Config)
                     export MYSQL_ROOT_PASSWORD=root_secure_password
@@ -76,7 +77,8 @@ pipeline {
                     export MYSQL_USER=vortex_user
                     export MYSQL_PASSWORD=user_secure_password
                     
-                    # 2. Export Ports (Aligning with your Backend Config)
+                    # 2. Export Ports (Needed for docker-compose to map correctly)
+                    # Note: These are now hidden behind Nginx, but we keep the variables consistent.
                     export BACKEND_PORT=8081
                     export FRONTEND_PORT=3000
                     
@@ -92,31 +94,14 @@ pipeline {
     }
 
     // ============================================
-    // POST ACTIONS (Notifications & Cleanup)
+    // POST ACTIONS (Cleanup Only)
     // ============================================
     post {
         always {
             script {
                 echo "🧹 Cleaning up Disk Space..."
-                // Remove unused images to keep t2.micro happy
+                // Removes unused images to keep your t2.micro server happy
                 sh 'docker image prune -af' 
-            }
-        }
-        success {
-            script {
-                echo "✅ Deployment Successful!"
-                // Optional: Send Email (Requires Jenkins Email Plugin)
-                // mail to: 'eklakalam420@gmail.com',
-                //      subject: "✅ Deploy Success: Vortex",
-                //      body: "Your pipeline finished successfully on Server ${SERVER_IP}"
-            }
-        }
-        failure {
-            script {
-                echo "❌ Deployment Failed!"
-                // mail to: 'eklakalam420@gmail.com',
-                //      subject: "❌ Deploy Failed: Vortex",
-                //      body: "Check Jenkins logs immediately."
             }
         }
     }
