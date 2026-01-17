@@ -28,11 +28,11 @@ services:
   # 2. BACKEND (Java Spring Boot)
   # ==============================
   backend:
-    # PULLS FROM YOUR DOCKER HUB
     image: eklakalam/vortex-backend:latest 
     container_name: vortex_backend
     restart: always
     ports:
+      # HOST:8081 -> CONTAINER:8081 (Matches your server.port=8081)
       - "${BACKEND_PORT}:8081"
     environment:
       DB_URL: jdbc:mysql://mysql_db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true
@@ -48,15 +48,12 @@ services:
   # 3. FRONTEND (Next.js)
   # ==============================
   frontend:
-    # PULLS FROM YOUR DOCKER HUB
     image: eklakalam/vortex-frontend:latest
     container_name: vortex_frontend
     restart: always
     ports:
       - "${FRONTEND_PORT}:3000"
-    environment:
-      # This passes the variable to the running container
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    # We removed NEXT_PUBLIC_API_URL here because it was BAKED IN during the GitHub Build
     networks:
       - vortex-network
     depends_on:

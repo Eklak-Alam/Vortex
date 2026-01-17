@@ -69,4 +69,4 @@ jobs:
           tags: eklakalam/vortex-frontend:latest
           # Baking in the default URL as requested
           build-args: |
-            NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
+            NEXT_PUBLIC_API_URL=http://52.66.131.136:8081/api/v1
