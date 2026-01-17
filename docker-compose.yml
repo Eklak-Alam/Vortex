@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # ==============================
+  # 1. DATABASE
+  # ==============================
+  mysql_db:
+    image: mysql:8.0
+    container_name: vortex_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - vortex-network
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # ==============================
+  # 2. BACKEND (Java Spring Boot)
+  # ==============================
+  backend:
+    # PULLS FROM YOUR DOCKER HUB
+    image: eklakalam/vortex-backend:latest 
+    container_name: vortex_backend
+    restart: always
+    ports:
+      - "${BACKEND_PORT}:8080"
+    environment:
+      DB_URL: jdbc:mysql://mysql_db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true
+      DB_USERNAME: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      - vortex-network
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+
+  # ==============================
+  # 3. FRONTEND (Next.js)
+  # ==============================
+  frontend:
+    # PULLS FROM YOUR DOCKER HUB
+    image: eklakalam/vortex-frontend:latest
+    container_name: vortex_frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    environment:
+      # This passes the variable to the running container
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    networks:
+      - vortex-network
+    depends_on:
+      - backend
+
+networks:
+  vortex-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

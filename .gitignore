@@ -1,0 +1,74 @@
+# =========================
+# GLOBAL / OS / IDE
+# =========================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# =========================
+# SECRETS (Never commit these!)
+# =========================
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+
+# =========================
+# DOCKER (Root)
+# =========================
+docker-compose.override.yml
+
+# =========================
+# FRONTEND (Next.js)
+# =========================
+frontend/node_modules/
+frontend/.next/
+frontend/build/
+frontend/dist/
+frontend/coverage/
+frontend/.vercel/
+
+# Lock files are usually good to commit, but if you want to ignore them:
+# frontend/package-lock.json 
+# frontend/yarn.lock
+
+# =========================
+# BACKEND (Java Spring Boot)
+# =========================
+backend/target/
+backend/bin/
+backend/.mvn/wrapper/maven-wrapper.properties
+
+# compiled class files
+**/*.class
+
+# log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs
+hs_err_pid*
+
+# =========================
+# IGNORE EXCEPTIONS
+# =========================
+# Sometimes we want to keep specific files despite rules above
+!backend/mvnw
+!backend/mvnw.cmd
